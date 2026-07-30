@@ -65,17 +65,32 @@
     
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+    /* Разделитель с отступами по бокам */
+    .divider {
+        height: 1px;
+        background-color: var(--border);
+        margin: 12px 14px;
+    }
+
     /* Динамическая Бенто-сетка верхнего блока */
     .bento-empty {
       background: var(--card-bg);
       border-radius: 18px;
-      padding: 22px 16px;
+      padding: 20px 16px;
       text-align: center;
-      font-weight: 600;
-      color: var(--text-light);
-      font-size: 0.95rem;
       margin-bottom: 16px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .bento-empty-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .bento-empty-subtitle {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-light);
     }
 
     .bento-grid {
@@ -177,7 +192,6 @@
     .slider:before {
       position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
       background-color: white; transition: .25s; border-radius: 50%;
-      /* Без тени */
       box-shadow: none;
     }
     input:checked + .slider { background-color: var(--primary); }
@@ -239,7 +253,6 @@
       padding: 5px;
       display: flex;
       gap: 4px;
-      /* Без тени */
       box-shadow: none;
     }
 
@@ -263,7 +276,6 @@
     .capsule-btn.active {
       background: var(--primary);
       color: white;
-      /* Без тени */
       box-shadow: none;
     }
   </style>
@@ -282,7 +294,8 @@
 
       <!-- Динамический верхний бенто-блок -->
       <div id="bento-empty" class="bento-empty">
-        Калькулятор доходов. Введите данные за сегодня
+        <div class="bento-empty-title">Калькулятор доходов</div>
+        <div class="bento-empty-subtitle">Введите данные за сегодня</div>
       </div>
 
       <div id="bento-grid" class="bento-grid hidden-block animated-block">
@@ -343,6 +356,9 @@
           <label for="tips">Сумма чаевых (₽)</label>
           <input type="number" id="tips" min="0" placeholder="0" oninput="calculate()">
         </div>
+
+        <!-- Разделитель -->
+        <div class="divider"></div>
 
         <!-- Переключатель По пути -->
         <div class="form-group">
@@ -434,21 +450,21 @@
     // Расчет комментариев и цвета
     function getCommentInfo(total, hours) {
       if (total > 7000) {
-        return { text: "Стахановец", bg: "#D97706", color: "#FFFFFF" }; // Янтарный/Золотой
+        return { text: "Стахановец", bg: "#D97706", color: "#FFFFFF" };
       }
       if (hours < 8) {
-        return { text: "Отдых", bg: "#4F46E5", color: "#FFFFFF" }; // Индиго
+        return { text: "Отдых", bg: "#4F46E5", color: "#FFFFFF" };
       }
       if (total > 6000) {
-        return { text: "Сверхприбыль", bg: "#059669", color: "#FFFFFF" }; // Изумрудный
+        return { text: "Сверхприбыль", bg: "#059669", color: "#FFFFFF" };
       }
       if (total > 5000) {
-        return { text: "Всё по плану", bg: "#16A34A", color: "#FFFFFF" }; // Зеленый
+        return { text: "Всё по плану", bg: "#16A34A", color: "#FFFFFF" };
       }
       if (total >= 4000) {
-        return { text: "Можно лучше", bg: "#EA580C", color: "#FFFFFF" }; // Оранжевый
+        return { text: "Можно лучше", bg: "#EA580C", color: "#FFFFFF" };
       }
-      return { text: "Грустно", bg: "#DC2626", color: "#FFFFFF" }; // Красный
+      return { text: "Грустно", bg: "#DC2626", color: "#FFFFFF" };
     }
 
     function calculate() {
@@ -474,10 +490,8 @@
         emptyBlock.classList.add('hidden-block');
         gridBlock.classList.remove('hidden-block');
 
-        // Обновление общего дохода
         document.getElementById('res-total').innerText = `${Math.round(total).toLocaleString('ru-RU')} ₽`;
         
-        // Обновление дохода в час
         const hourlyEl = document.getElementById('res-hourly');
         hourlyEl.innerText = `${Math.round(hourlyIncome).toLocaleString('ru-RU')} ₽/ч`;
 
@@ -491,7 +505,6 @@
           hourlyEl.style.color = '#F59E0B';
         }
 
-        // Обновление комментария и его цвета
         const commentInfo = getCommentInfo(total, hours);
         const commentCard = document.getElementById('res-comment-card');
         const commentText = document.getElementById('res-comment');
@@ -713,7 +726,6 @@
           const onTheWayInfo = item.onTheWayOrders ? `<div>По пути: <b>${item.onTheWayOrders} шт</b> (+${item.onTheWayOrders * 20}₽)</div>` : '';
           const tipsInfo = item.tips ? `<div>Чаевые: <b>${item.tips} ₽</b></div>` : '';
 
-          // Цвет дохода в истории исходит из комментария за этот день
           const commentInfo = getCommentInfo(item.total, item.hours);
 
           html += `
