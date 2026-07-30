@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Учет Дохода</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4F46E5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    :root {
+      --bg: #F3F4F6;
+      --card-bg: #FFFFFF;
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --text: #1F2937;
+      --text-light: #6B7280;
+      --border: #E5E7EB;
+      --danger: #EF4444;
+      --accent-light: #EEF2FF;
+      --warning-bg: #FEF3C7;
+      --warning-text: #92400E;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-top: 12px; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
+    
+    .container { max-width: 500px; margin: 0 auto; padding: 0 16px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Плашка режима редактирования */
+    .edit-banner {
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      border: 1px solid #FCD34D;
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .exit-edit-btn {
+      background: #D97706;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Карточки и Формы */
+    .card { background: var(--card-bg); border-radius: 18px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+    .form-group { margin-bottom: 12px; }
+    .form-group:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
+    input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; outline: none; transition: all 0.2s; background: #FAFAFA; }
+    input:focus { border-color: var(--primary); background: #FFF; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Динамическая Бенто-сетка верхнего блока */
+    .bento-empty {
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 22px 16px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--text-light);
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .bento-card {
+      border-radius: 18px;
+      padding: 14px 14px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .bento-main {
+      background: linear-gradient(135deg, #4F46E5, #6366F1);
+      color: white;
+    }
+
+    .bento-main .bento-label {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .bento-main .bento-value-large {
+      font-size: 1.7rem;
+      font-weight: 800;
+      margin-top: 4px;
+      line-height: 1.1;
+    }
+
+    .bento-right-col {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .bento-sub {
+      background: var(--card-bg);
+    }
+
+    .bento-label {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .bento-value-small {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .bento-comment {
+      color: white;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .bento-comment-text {
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    /* Тумблеры БЕЗ теней */
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+    }
+    .toggle-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #D1D5DB; transition: .25s; border-radius: 26px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
+      background-color: white; transition: .25s; border-radius: 50%;
+      /* Без тени */
+      box-shadow: none;
+    }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    .hidden-block { display: none !important; }
+    .animated-block { animation: fadeIn 0.25s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* История */
+    .week-block { margin-bottom: 20px; }
+    .week-header { display: flex; justify-content: space-between; align-items: center; background: #E0E7FF; color: var(--primary); padding: 10px 14px; border-radius: 12px; font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; }
+    
+    .day-card { position: relative; cursor: pointer; transition: transform 0.15s ease; }
+    .day-card:active { transform: scale(0.98); }
+    
+    .day-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; }
+    .day-title { font-weight: 700; font-size: 0.95rem; text-transform: capitalize; color: var(--text); }
+    .day-title.today { color: var(--primary); font-weight: 800; }
+    
+    .day-income { font-weight: 800; font-size: 1.1rem; }
+    .day-details { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.85rem; color: var(--text-light); padding-right: 24px; }
+    
+    .delete-btn {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      background: none;
+      border: none;
+      color: #9CA3AF;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+    .delete-btn:active { color: var(--danger); }
+
+    /* Капсульная навигация БЕЗ теней */
+    .capsule-nav-container {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .capsule-nav {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 5px;
+      display: flex;
+      gap: 4px;
+      /* Без тени */
+      box-shadow: none;
+    }
+
+    .capsule-btn {
+      border: none;
+      background: transparent;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .capsule-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    .capsule-btn.active {
+      background: var(--primary);
+      color: white;
+      /* Без тени */
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Вкладка Калькулятора -->
+    <div id="tab-calc" class="tab-content active">
+      
+      <!-- Плашка режима редактирования -->
+      <div id="edit-banner" class="edit-banner hidden-block">
+        <span>Редактирование: <b id="edit-banner-date"></b></span>
+        <button type="button" class="exit-edit-btn" onclick="exitEditMode()">Завершить</button>
+      </div>
+
+      <!-- Динамический верхний бенто-блок -->
+      <div id="bento-empty" class="bento-empty">
+        Калькулятор доходов. Введите данные за сегодня
+      </div>
+
+      <div id="bento-grid" class="bento-grid hidden-block animated-block">
+        <!-- Левый большой блок -->
+        <div class="bento-card bento-main">
+          <div class="bento-label">Общий доход</div>
+          <div class="bento-value-large" id="res-total">0 ₽</div>
+        </div>
+        
+        <!-- Правая колонка из двух блоков -->
+        <div class="bento-right-col">
+          <div class="bento-card bento-sub">
+            <div class="bento-label">В час</div>
+            <div class="bento-value-small" id="res-hourly">0 ₽/ч</div>
+          </div>
+          <div class="bento-card bento-comment" id="res-comment-card">
+            <div class="bento-label" style="color: rgba(255,255,255,0.85)">Статус</div>
+            <div class="bento-comment-text" id="res-comment">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="grid-2" style="margin-bottom: 12px;">
+          <div class="form-group">
+            <label for="orders">Заказы (шт)</label>
+            <input type="number" id="orders" min="0" placeholder="0" oninput="calculate()">
+          </div>
+          <div class="form-group">
+            <label for="hours">Часы (ч)</label>
+            <input type="number" id="hours" min="0" step="0.1" placeholder="0" oninput="calculate()">
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 16px;">
+          <div class="form-group">
+            <label for="rate-order">Ставка/заказ (₽)</label>
+            <input type="number" id="rate-order" value="80" oninput="calculate()">
+          </div>
+          <div class="form-group">
+            <label for="rate-hour">Ставка/час (₽)</label>
+            <input type="number" id="rate-hour" value="190" oninput="calculate()">
+          </div>
+        </div>
+
+        <!-- Переключатель Чаевые -->
+        <div class="form-group">
+          <div class="toggle-row">
+            <span class="toggle-label">Есть чаевые</span>
+            <label class="switch">
+              <input type="checkbox" id="tips-toggle" onchange="toggleTips()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div id="tips-block" class="form-group hidden-block animated-block" style="margin-bottom: 12px;">
+          <label for="tips">Сумма чаевых (₽)</label>
+          <input type="number" id="tips" min="0" placeholder="0" oninput="calculate()">
+        </div>
+
+        <!-- Переключатель По пути -->
+        <div class="form-group">
+          <div class="toggle-row">
+            <span class="toggle-label">Есть «По пути»</span>
+            <label class="switch">
+              <input type="checkbox" id="ontheway-toggle" onchange="toggleOnTheWay()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div id="ontheway-block" class="form-group hidden-block animated-block" style="margin-top: 8px;">
+          <label for="ontheway-orders">Заказы «По пути» (+20 ₽ каждый)</label>
+          <input type="number" id="ontheway-orders" min="0" placeholder="0" oninput="calculate()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Вкладка Истории -->
+    <div id="tab-history" class="tab-content">
+      <div id="history-container">
+        <!-- Недели и карточки дней -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Капсульная навигация снизу -->
+  <div class="capsule-nav-container">
+    <nav class="capsule-nav">
+      <button class="capsule-btn active" onclick="switchTab('calc')">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Расчет</span>
+      </button>
+      <button class="capsule-btn" onclick="switchTab('history')">
+        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+        <span>История</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    let hasOnTheWay = false;
+    let hasTips = false;
+    let editingDate = null;
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.capsule-btn').forEach(el => el.classList.remove('active'));
+      
+      if (tabName === 'calc') {
+        document.getElementById('tab-calc').classList.add('active');
+        document.querySelectorAll('.capsule-btn')[0].classList.add('active');
+      } else {
+        document.getElementById('tab-history').classList.add('active');
+        document.querySelectorAll('.capsule-btn')[1].classList.add('active');
+        renderHistory();
+      }
+    }
+
+    function toggleOnTheWay() {
+      hasOnTheWay = document.getElementById('ontheway-toggle').checked;
+      const block = document.getElementById('ontheway-block');
+      const input = document.getElementById('ontheway-orders');
+
+      if (hasOnTheWay) {
+        block.classList.remove('hidden-block');
+      } else {
+        block.classList.add('hidden-block');
+        input.value = '';
+      }
+      calculate();
+    }
+
+    function toggleTips() {
+      hasTips = document.getElementById('tips-toggle').checked;
+      const block = document.getElementById('tips-block');
+      const input = document.getElementById('tips');
+
+      if (hasTips) {
+        block.classList.remove('hidden-block');
+      } else {
+        block.classList.add('hidden-block');
+        input.value = '';
+      }
+      calculate();
+    }
+
+    // Расчет комментариев и цвета
+    function getCommentInfo(total, hours) {
+      if (total > 7000) {
+        return { text: "Стахановец", bg: "#D97706", color: "#FFFFFF" }; // Янтарный/Золотой
+      }
+      if (hours < 8) {
+        return { text: "Отдых", bg: "#4F46E5", color: "#FFFFFF" }; // Индиго
+      }
+      if (total > 6000) {
+        return { text: "Сверхприбыль", bg: "#059669", color: "#FFFFFF" }; // Изумрудный
+      }
+      if (total > 5000) {
+        return { text: "Всё по плану", bg: "#16A34A", color: "#FFFFFF" }; // Зеленый
+      }
+      if (total >= 4000) {
+        return { text: "Можно лучше", bg: "#EA580C", color: "#FFFFFF" }; // Оранжевый
+      }
+      return { text: "Грустно", bg: "#DC2626", color: "#FFFFFF" }; // Красный
+    }
+
+    function calculate() {
+      const orders = parseFloat(document.getElementById('orders').value) || 0;
+      const hours = parseFloat(document.getElementById('hours').value) || 0;
+      const rateOrder = parseFloat(document.getElementById('rate-order').value) || 0;
+      const rateHour = parseFloat(document.getElementById('rate-hour').value) || 0;
+      const tips = hasTips ? (parseFloat(document.getElementById('tips').value) || 0) : 0;
+      const onTheWayOrders = hasOnTheWay ? (parseFloat(document.getElementById('ontheway-orders').value) || 0) : 0;
+
+      const total = (orders * rateOrder) + (hours * rateHour) + (onTheWayOrders * 20) + tips;
+      const hourlyIncome = hours > 0 ? (total / hours) : 0;
+
+      const hasData = (orders > 0 || hours > 0 || onTheWayOrders > 0 || tips > 0 || total > 0);
+
+      const emptyBlock = document.getElementById('bento-empty');
+      const gridBlock = document.getElementById('bento-grid');
+
+      if (!hasData) {
+        emptyBlock.classList.remove('hidden-block');
+        gridBlock.classList.add('hidden-block');
+      } else {
+        emptyBlock.classList.add('hidden-block');
+        gridBlock.classList.remove('hidden-block');
+
+        // Обновление общего дохода
+        document.getElementById('res-total').innerText = `${Math.round(total).toLocaleString('ru-RU')} ₽`;
+        
+        // Обновление дохода в час
+        const hourlyEl = document.getElementById('res-hourly');
+        hourlyEl.innerText = `${Math.round(hourlyIncome).toLocaleString('ru-RU')} ₽/ч`;
+
+        if (hourlyIncome < 500) {
+          hourlyEl.style.color = '#EF4444';
+        } else if (hourlyIncome < 600) {
+          hourlyEl.style.color = 'var(--text)';
+        } else if (hourlyIncome < 700) {
+          hourlyEl.style.color = '#10B981';
+        } else {
+          hourlyEl.style.color = '#F59E0B';
+        }
+
+        // Обновление комментария и его цвета
+        const commentInfo = getCommentInfo(total, hours);
+        const commentCard = document.getElementById('res-comment-card');
+        const commentText = document.getElementById('res-comment');
+
+        commentCard.style.backgroundColor = commentInfo.bg;
+        commentCard.style.color = commentInfo.color;
+        commentText.innerText = commentInfo.text;
+      }
+
+      const data = { orders, hours, rateOrder, rateHour, tips, onTheWayOrders, total, hourlyIncome };
+      autoSave(data);
+
+      return data;
+    }
+
+    function autoSave(data) {
+      const targetDate = editingDate || getTodayStr();
+      let history = JSON.parse(localStorage.getItem('shift_history') || '[]');
+
+      if (data.orders > 0 || data.hours > 0 || data.onTheWayOrders > 0 || data.tips > 0) {
+        const existingIndex = history.findIndex(item => item.date === targetDate);
+        const entry = {
+          date: targetDate,
+          ...data,
+          timestamp: Date.now()
+        };
+
+        if (existingIndex !== -1) {
+          history[existingIndex] = entry;
+        } else {
+          history.push(entry);
+        }
+        localStorage.setItem('shift_history', JSON.stringify(history));
+      }
+    }
+
+    function editDayRecord(dateStr) {
+      const history = JSON.parse(localStorage.getItem('shift_history') || '[]');
+      const item = history.find(i => i.date === dateStr);
+      if (!item) return;
+
+      editingDate = dateStr;
+
+      document.getElementById('orders').value = item.orders || '';
+      document.getElementById('hours').value = item.hours || '';
+      document.getElementById('rate-order').value = item.rateOrder || 80;
+      document.getElementById('rate-hour').value = item.rateHour || 190;
+
+      if (item.tips && item.tips > 0) {
+        hasTips = true;
+        document.getElementById('tips-toggle').checked = true;
+        document.getElementById('tips-block').classList.remove('hidden-block');
+        document.getElementById('tips').value = item.tips;
+      } else {
+        hasTips = false;
+        document.getElementById('tips-toggle').checked = false;
+        document.getElementById('tips-block').classList.add('hidden-block');
+        document.getElementById('tips').value = '';
+      }
+
+      if (item.onTheWayOrders && item.onTheWayOrders > 0) {
+        hasOnTheWay = true;
+        document.getElementById('ontheway-toggle').checked = true;
+        document.getElementById('ontheway-block').classList.remove('hidden-block');
+        document.getElementById('ontheway-orders').value = item.onTheWayOrders;
+      } else {
+        hasOnTheWay = false;
+        document.getElementById('ontheway-toggle').checked = false;
+        document.getElementById('ontheway-block').classList.add('hidden-block');
+        document.getElementById('ontheway-orders').value = '';
+      }
+
+      const dateObj = new Date(dateStr);
+      const formattedDate = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+      document.getElementById('edit-banner-date').innerText = formattedDate;
+      document.getElementById('edit-banner').classList.remove('hidden-block');
+
+      switchTab('calc');
+      calculate();
+    }
+
+    function exitEditMode() {
+      editingDate = null;
+      document.getElementById('edit-banner').classList.add('hidden-block');
+      clearFormFields();
+      loadTodayData();
+    }
+
+    function clearFormFields() {
+      document.getElementById('orders').value = '';
+      document.getElementById('hours').value = '';
+      document.getElementById('rate-order').value = '80';
+      document.getElementById('rate-hour').value = '190';
+      document.getElementById('tips').value = '';
+      document.getElementById('ontheway-orders').value = '';
+      
+      hasTips = false;
+      document.getElementById('tips-toggle').checked = false;
+      document.getElementById('tips-block').classList.add('hidden-block');
+
+      hasOnTheWay = false;
+      document.getElementById('ontheway-toggle').checked = false;
+      document.getElementById('ontheway-block').classList.add('hidden-block');
+    }
+
+    function loadTodayData() {
+      const today = getTodayStr();
+      const history = JSON.parse(localStorage.getItem('shift_history') || '[]');
+      const todayData = history.find(item => item.date === today);
+
+      if (todayData) {
+        if (todayData.orders) document.getElementById('orders').value = todayData.orders;
+        if (todayData.hours) document.getElementById('hours').value = todayData.hours;
+        if (todayData.rateOrder) document.getElementById('rate-order').value = todayData.rateOrder;
+        if (todayData.rateHour) document.getElementById('rate-hour').value = todayData.rateHour;
+        
+        if (todayData.tips && todayData.tips > 0) {
+          hasTips = true;
+          document.getElementById('tips-toggle').checked = true;
+          document.getElementById('tips-block').classList.remove('hidden-block');
+          document.getElementById('tips').value = todayData.tips;
+        }
+
+        if (todayData.onTheWayOrders && todayData.onTheWayOrders > 0) {
+          hasOnTheWay = true;
+          document.getElementById('ontheway-toggle').checked = true;
+          document.getElementById('ontheway-block').classList.remove('hidden-block');
+          document.getElementById('ontheway-orders').value = todayData.onTheWayOrders;
+        }
+      }
+      calculate();
+    }
+
+    function getTodayStr() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function deleteRecord(dateStr, event) {
+      event.stopPropagation();
+      
+      if (confirm('Удалить запись за этот день?')) {
+        let history = JSON.parse(localStorage.getItem('shift_history') || '[]');
+        history = history.filter(item => item.date !== dateStr);
+        localStorage.setItem('shift_history', JSON.stringify(history));
+
+        if (editingDate === dateStr) {
+          exitEditMode();
+        } else if (dateStr === getTodayStr()) {
+          clearFormFields();
+          calculate();
+        }
+
+        renderHistory();
+      }
+    }
+
+    function getWeekDetails(dateStr) {
+      const date = new Date(dateStr);
+      const day = date.getDay();
+      const diffToMon = date.getDate() - day + (day === 0 ? -6 : 1);
+      
+      const monday = new Date(date);
+      monday.setDate(diffToMon);
+      
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      const format = d => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      return {
+        key: monday.toISOString().split('T')[0],
+        label: `${format(monday)} — ${format(sunday)}`
+      };
+    }
+
+    function renderHistory() {
+      const historyContainer = document.getElementById('history-container');
+      const history = JSON.parse(localStorage.getItem('shift_history') || '[]');
+      const todayStr = getTodayStr();
+
+      if (history.length === 0) {
+        historyContainer.innerHTML = '<div style="text-align:center; color: var(--text-light); margin-top: 40px;">История пуста</div>';
+        return;
+      }
+
+      history.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      const weeks = {};
+      history.forEach(item => {
+        const week = getWeekDetails(item.date);
+        if (!weeks[week.key]) {
+          weeks[week.key] = { label: week.label, totalIncome: 0, items: [] };
+        }
+        weeks[week.key].items.push(item);
+        weeks[week.key].totalIncome += item.total;
+      });
+
+      let html = '';
+      for (const weekKey in weeks) {
+        const week = weeks[weekKey];
+        html += `
+          <div class="week-block">
+            <div class="week-header">
+              <span>${week.label}</span>
+              <span>${Math.round(week.totalIncome).toLocaleString('ru-RU')} ₽</span>
+            </div>
+        `;
+
+        week.items.forEach(item => {
+          const dateObj = new Date(item.date);
+          const formattedDate = dateObj.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' });
+          
+          const isToday = item.date === todayStr;
+          const dateClass = isToday ? 'day-title today' : 'day-title';
+
+          const onTheWayInfo = item.onTheWayOrders ? `<div>По пути: <b>${item.onTheWayOrders} шт</b> (+${item.onTheWayOrders * 20}₽)</div>` : '';
+          const tipsInfo = item.tips ? `<div>Чаевые: <b>${item.tips} ₽</b></div>` : '';
+
+          // Цвет дохода в истории исходит из комментария за этот день
+          const commentInfo = getCommentInfo(item.total, item.hours);
+
+          html += `
+            <div class="card day-card" onclick="editDayRecord('${item.date}')">
+              <div class="day-header">
+                <span class="${dateClass}">${formattedDate}</span>
+                <span class="day-income" style="color: ${commentInfo.bg}">${Math.round(item.total).toLocaleString('ru-RU')} ₽</span>
+              </div>
+              <div class="day-details">
+                <div>Заказы: <b>${item.orders} шт</b></div>
+                <div>Часы: <b>${item.hours} ч</b></div>
+                ${onTheWayInfo}
+                ${tipsInfo}
+                <div>Доход в час: <b>${Math.round(item.hourlyIncome)} ₽/ч</b></div>
+              </div>
+              <button class="delete-btn" onclick="deleteRecord('${item.date}', event)" title="Удалить">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              </button>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      }
+
+      historyContainer.innerHTML = html;
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+    }
+
+    loadTodayData();
+  </script>
+</body>
+</html>
