@@ -51,6 +51,8 @@
     body { background-color: var(--bg); color: var(--text); padding-top: 12px; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
     
     .container { max-width: 500px; margin: 0 auto; padding: 0 16px; }
+
+    /* Мгновенное переключение контента вкладок без задержек */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
@@ -79,11 +81,18 @@
       cursor: pointer;
     }
 
-    /* Карточки и Формы */
-    .card { background: var(--card-bg); border-radius: 18px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-    .card-compact { padding: 14px 16px; }
-    .form-group { margin-bottom: 12px; }
-    .form-group:last-child { margin-bottom: 0; }
+    /* Карточки с ровными отступами */
+    .card { 
+      background: var(--card-bg); 
+      border-radius: 18px; 
+      padding: 16px; 
+      margin-bottom: 16px; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .form-group { margin-bottom: 0; }
     label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
     
     input { 
@@ -96,7 +105,18 @@
       transition: all 0.2s; 
       background: var(--input-bg); 
       color: var(--text);
+      box-sizing: border-box;
     }
+    
+    /* Стилизация полей времени */
+    input[type="time"] {
+      text-align: center;
+      min-width: 0;
+      max-width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
     input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
     input:disabled { opacity: 0.5; cursor: not-allowed; }
     
@@ -115,9 +135,14 @@
     }
     .btn-plus-one:active { opacity: 0.8; }
 
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-2 { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 12px; 
+    }
+    .grid-2 > * { min-width: 0; }
 
-    .divider { height: 1px; background-color: var(--border); margin: 14px 0; }
+    .divider { height: 1px; background-color: var(--border); margin: 2px 0; }
 
     /* Бенто-блок */
     .bento-empty {
@@ -164,25 +189,29 @@
       font-weight: 700;
       font-size: 0.9rem;
       text-align: center;
-      margin-bottom: 12px;
     }
     .work-timer-banner.paused {
       background: var(--warning-bg);
       color: var(--warning-text);
     }
 
+    #work-mode-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .btn-action-group { 
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); 
       gap: 8px; 
-      margin-top: 12px; 
     }
     .btn-work-action {
-      padding: 10px 12px;
+      padding: 12px;
       border-radius: 12px;
       border: none;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.2s;
       white-space: nowrap;
@@ -219,19 +248,65 @@
     /* Шторка */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-overlay); backdrop-filter: blur(4px); z-index: 200; display: flex; justify-content: center; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .bottom-sheet { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 20px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); max-height: 85vh; overflow-y: auto; }
+    .bottom-sheet { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 20px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
     .modal-overlay.active .bottom-sheet { transform: translateY(0); }
-    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; }
     .sheet-title { font-weight: 800; font-size: 1.1rem; }
     .sheet-close { background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer; }
-    .primary-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 12px; }
+    .primary-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; }
 
-    /* Капсульная навигация */
+    /* Капсульная навигация с плавно плавающей капсулой */
     .capsule-nav-container { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 100; pointer-events: none; }
-    .capsule-nav { pointer-events: auto; background: var(--capsule-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 40px; padding: 5px; display: flex; gap: 4px; }
-    .capsule-btn { border: none; background: transparent; padding: 10px 24px; border-radius: 30px; font-size: 0.9rem; font-weight: 600; color: var(--text-light); cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 8px; }
+    .capsule-nav { 
+      position: relative;
+      pointer-events: auto; 
+      background: var(--capsule-bg); 
+      backdrop-filter: blur(12px); 
+      -webkit-backdrop-filter: blur(12px); 
+      border: 1px solid var(--border); 
+      border-radius: 40px; 
+      padding: 5px; 
+      display: flex; 
+      gap: 4px; 
+    }
+
+    /* Скользящий фон активной кнопки */
+    .capsule-pill {
+      position: absolute;
+      top: 5px;
+      bottom: 5px;
+      left: 5px;
+      width: calc(50% - 7px);
+      background: var(--primary);
+      border-radius: 30px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1;
+    }
+
+    .capsule-nav[data-active="history"] .capsule-pill {
+      transform: translateX(calc(100% + 4px));
+    }
+
+    .capsule-btn { 
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      border: none; 
+      background: transparent; 
+      padding: 10px 24px; 
+      border-radius: 30px; 
+      font-size: 0.9rem; 
+      font-weight: 600; 
+      color: var(--text-light); 
+      cursor: pointer; 
+      transition: color 0.25s ease; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      gap: 8px; 
+    }
     .capsule-btn svg { width: 18px; height: 18px; fill: currentColor; }
-    .capsule-btn.active { background: var(--primary); color: white; }
+    .capsule-btn.active { color: white; }
   </style>
 </head>
 <body>
@@ -272,7 +347,7 @@
 
       <!-- Карточка 1: Показатели -->
       <div class="card">
-        <div class="grid-2" style="margin-bottom: 12px;">
+        <div class="grid-2">
           <div class="form-group">
             <label for="orders">Заказы (шт)</label>
             <div class="input-with-btn">
@@ -302,8 +377,8 @@
       </div>
 
       <!-- Карточка 2: Режим «На работе» (Скрывается при редактировании) -->
-      <div class="card card-compact" id="card-at-work">
-        <div class="form-group" style="margin-bottom: 0;">
+      <div class="card" id="card-at-work">
+        <div class="form-group">
           <div class="toggle-row">
             <span class="toggle-label">На работе</span>
             <label class="switch">
@@ -313,8 +388,7 @@
           </div>
         </div>
 
-        <div id="work-mode-block" class="hidden-block animated-block" style="margin-top: 12px;">
-          
+        <div id="work-mode-block" class="hidden-block animated-block">
           <div id="work-timer-banner" class="work-timer-banner hidden-block"></div>
 
           <div class="grid-2">
@@ -349,7 +423,7 @@
           </div>
         </div>
 
-        <div id="tips-block" class="form-group hidden-block animated-block" style="margin-top: 10px;">
+        <div id="tips-block" class="form-group hidden-block animated-block">
           <label for="tips">Сумма чаевых (₽)</label>
           <input type="number" id="tips" min="0" placeholder="0" oninput="calculate()">
         </div>
@@ -366,7 +440,7 @@
           </div>
         </div>
 
-        <div id="ontheway-block" class="form-group hidden-block animated-block" style="margin-top: 10px;">
+        <div id="ontheway-block" class="form-group hidden-block animated-block">
           <label for="ontheway-orders">Заказы «По пути» (+20 ₽ каждый)</label>
           <input type="number" id="ontheway-orders" min="0" placeholder="0" oninput="calculate()">
         </div>
@@ -396,7 +470,7 @@
         <input type="date" id="sheet-date">
       </div>
 
-      <div class="grid-2" style="margin-top: 12px;">
+      <div class="grid-2">
         <div class="form-group">
           <label for="sheet-orders">Заказы (шт)</label>
           <input type="number" id="sheet-orders" min="0" placeholder="0">
@@ -407,7 +481,7 @@
         </div>
       </div>
 
-      <div class="grid-2" style="margin-top: 12px;">
+      <div class="grid-2">
         <div class="form-group">
           <label for="sheet-rate-order">Ставка/заказ (₽)</label>
           <input type="number" id="sheet-rate-order" value="80">
@@ -418,7 +492,7 @@
         </div>
       </div>
 
-      <div class="grid-2" style="margin-top: 12px;">
+      <div class="grid-2">
         <div class="form-group">
           <label for="sheet-tips">Чаевые (₽)</label>
           <input type="number" id="sheet-tips" min="0" placeholder="0">
@@ -433,9 +507,10 @@
     </div>
   </div>
 
-  <!-- Капсульная навигация -->
+  <!-- Капсульная навигация с анимируемым фоном -->
   <div class="capsule-nav-container">
-    <nav class="capsule-nav">
+    <nav class="capsule-nav" id="capsule-nav" data-active="calc">
+      <div class="capsule-pill"></div>
       <button class="capsule-btn active" onclick="switchTab('calc')">
         <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
         <span>Расчет</span>
@@ -459,21 +534,25 @@
     let pauseStartTime = null;
     let totalPauseMs = 0;
 
+    /* Мгновенный переключатель контента + плавный сдвиг капсулы навигации */
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.capsule-btn').forEach(el => el.classList.remove('active'));
       
+      const nav = document.getElementById('capsule-nav');
+
       if (tabName === 'calc') {
         document.getElementById('tab-calc').classList.add('active');
         document.querySelectorAll('.capsule-btn')[0].classList.add('active');
+        if (nav) nav.setAttribute('data-active', 'calc');
       } else {
         document.getElementById('tab-history').classList.add('active');
         document.querySelectorAll('.capsule-btn')[1].classList.add('active');
+        if (nav) nav.setAttribute('data-active', 'history');
         renderHistory();
       }
     }
 
-    // Быстрое добавление +1
     function addOne(fieldId) {
       const input = document.getElementById(fieldId);
       if (input.disabled) return;
@@ -483,7 +562,6 @@
       calculate();
     }
 
-    // Переключатели
     function toggleOnTheWay() {
       hasOnTheWay = document.getElementById('ontheway-toggle').checked;
       const block = document.getElementById('ontheway-block');
@@ -512,7 +590,6 @@
       calculate();
     }
 
-    /* Логика времени */
     function getNearestNextHourStr() {
       const now = new Date();
       if (now.getMinutes() > 0 || now.getSeconds() > 0) {
@@ -550,7 +627,6 @@
       calculate();
     }
 
-    /* Управление блокировкой и скрытием +1 */
     function setOrderControlsState(blocked) {
       document.getElementById('orders').disabled = blocked;
       document.getElementById('ontheway-orders').disabled = blocked;
@@ -564,7 +640,6 @@
       }
     }
 
-    /* Режим "На работе" */
     function toggleWorkMode() {
       isWorkMode = document.getElementById('work-mode-toggle').checked;
       const block = document.getElementById('work-mode-block');
@@ -576,21 +651,20 @@
       if (isWorkMode) {
         block.classList.remove('hidden-block');
         hoursInput.disabled = true;
-        hoursPlusBtn.classList.add('hidden-block'); // Скрываем +1 для часов
+        hoursPlusBtn.classList.add('hidden-block');
 
         if (!startInput.value) {
           startInput.value = getNearestNextHourStr();
           endInput.value = getEndTimePlus8Str(startInput.value);
         }
 
-        // Пока смена не началась — заказы заблокированы
         if (!isShiftStarted) {
           setOrderControlsState(true);
         }
       } else {
         block.classList.add('hidden-block');
         hoursInput.disabled = false;
-        hoursPlusBtn.classList.remove('hidden-block'); // Возвращаем +1 для часов
+        hoursPlusBtn.classList.remove('hidden-block');
         stopWorkShift();
       }
       calculate();
@@ -603,10 +677,9 @@
       startWorkTimer();
     }
 
-    /* Начать раньше: ставить start = сейчас, конец остается БЕЗ изменений */
     function startWorkEarlier() {
       const startInput = document.getElementById('work-start');
-      startInput.value = getCurrentTimeStr(); // время в момент нажатия
+      startInput.value = getCurrentTimeStr();
 
       if (!isShiftStarted) {
         startWorkShift();
@@ -645,7 +718,7 @@
         pauseBtn.innerText = 'Продолжить';
         pauseBtn.classList.add('active');
         banner.classList.add('paused');
-        setOrderControlsState(true); // Заблокировать добавление заказов и скрыть +1
+        setOrderControlsState(true);
       } else {
         isPaused = false;
         if (pauseStartTime) {
@@ -713,7 +786,6 @@
       btnStart.classList.add('hidden-block');
       btnFinish.classList.remove('hidden-block');
 
-      // 1. Пауза
       if (isPaused) {
         const currentPauseMs = Date.now() - pauseStartTime;
         banner.innerText = `Пауза: ${formatHMS(currentPauseMs)}`;
@@ -723,7 +795,6 @@
         return;
       }
 
-      // 2. Время начала еще НЕ наступило
       if (now < startDate) {
         const timeToStartMs = startDate - now;
         banner.innerText = `До начала работы: ${formatHMS(timeToStartMs)}`;
@@ -731,23 +802,21 @@
         btnEarly.classList.remove('hidden-block');
         btnPause.classList.add('hidden-block');
         
-        setOrderControlsState(true); // Заблокировать заказы до начала смены
+        setOrderControlsState(true);
         document.getElementById('hours').value = '0';
         calculate();
         return;
       }
 
-      // 3. Смена завершена по времени
       if (endDate && now >= endDate) {
         banner.innerText = `Смена завершена`;
         finishWorkShift();
         return;
       }
 
-      // 4. Смена активно идет
       btnEarly.classList.add('hidden-block');
       btnPause.classList.remove('hidden-block');
-      setOrderControlsState(false); // Разблокировать заказы и показать +1
+      setOrderControlsState(false);
 
       let activeWorkMs = (now - startDate) - totalPauseMs;
       if (activeWorkMs < 0) activeWorkMs = 0;
@@ -760,7 +829,6 @@
       calculate();
     }
 
-    /* Системы статусов */
     function getCommentInfo(total, hourlyIncome) {
       if (total >= 7000) {
         return { text: "Стахановец", bg: "#D97706", color: "#FFFFFF" };
@@ -982,7 +1050,6 @@
       }
     }
 
-    /* Шторка создания записи */
     function openAddModal() {
       const modal = document.getElementById('add-modal');
       const dateInput = document.getElementById('sheet-date');
