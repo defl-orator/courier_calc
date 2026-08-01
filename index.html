@@ -52,7 +52,7 @@
     
     .container { max-width: 500px; margin: 0 auto; padding: 0 16px; }
 
-    /* Мгновенное переключение контента вкладок без задержек */
+    /* Переключение вкладок */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
@@ -81,7 +81,7 @@
       cursor: pointer;
     }
 
-    /* Карточки с ровными отступами */
+    /* Карточки */
     .card { 
       background: var(--card-bg); 
       border-radius: 18px; 
@@ -108,7 +108,6 @@
       box-sizing: border-box;
     }
     
-    /* Стилизация полей времени */
     input[type="time"] {
       text-align: center;
       min-width: 0;
@@ -255,7 +254,7 @@
     .sheet-close { background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer; }
     .primary-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; }
 
-    /* Капсульная навигация с плавно плавающей капсулой */
+    /* Капсульная навигация */
     .capsule-nav-container { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 100; pointer-events: none; }
     .capsule-nav { 
       position: relative;
@@ -270,7 +269,6 @@
       gap: 4px; 
     }
 
-    /* Скользящий фон активной кнопки */
     .capsule-pill {
       position: absolute;
       top: 5px;
@@ -398,7 +396,7 @@
             </div>
             <div class="form-group">
               <label for="work-end">Конец работы</label>
-              <input type="time" id="work-end" onchange="calculate()">
+              <input type="time" id="work-end" onchange="onWorkEndTimeChange()">
             </div>
           </div>
 
@@ -507,7 +505,7 @@
     </div>
   </div>
 
-  <!-- Капсульная навигация с анимируемым фоном -->
+  <!-- Капсульная навигация -->
   <div class="capsule-nav-container">
     <nav class="capsule-nav" id="capsule-nav" data-active="calc">
       <div class="capsule-pill"></div>
@@ -534,7 +532,6 @@
     let pauseStartTime = null;
     let totalPauseMs = 0;
 
-    /* Мгновенный переключатель контента + плавный сдвиг капсулы навигации */
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.capsule-btn').forEach(el => el.classList.remove('active'));
@@ -590,6 +587,73 @@
       calculate();
     }
 
+    /* Сохранение и загрузка состояния режима "На работе" */
+    function saveWorkState() {
+      if (!isWorkMode) {
+        localStorage.removeItem('work_shift_state');
+        return;
+      }
+      const state = {
+        isWorkMode,
+        isShiftStarted,
+        isPaused,
+        pauseStartTime,
+        totalPauseMs,
+        workStart: document.getElementById('work-start').value,
+        workEnd: document.getElementById('work-end').value,
+        shiftDateStr: getTodayStr()
+      };
+      localStorage.setItem('work_shift_state', JSON.stringify(state));
+    }
+
+    function loadWorkState() {
+      const raw = localStorage.getItem('work_shift_state');
+      if (!raw) return;
+      try {
+        const state = JSON.parse(raw);
+        if (!state || state.shiftDateStr !== getTodayStr()) {
+          localStorage.removeItem('work_shift_state');
+          return;
+        }
+
+        isWorkMode = !!state.isWorkMode;
+        isShiftStarted = !!state.isShiftStarted;
+        isPaused = !!state.isPaused;
+        pauseStartTime = state.pauseStartTime || null;
+        totalPauseMs = state.totalPauseMs || 0;
+
+        document.getElementById('work-mode-toggle').checked = isWorkMode;
+
+        const block = document.getElementById('work-mode-block');
+        const hoursInput = document.getElementById('hours');
+        const hoursPlusBtn = document.getElementById('hours-plus-btn');
+
+        if (state.workStart) document.getElementById('work-start').value = state.workStart;
+        if (state.workEnd) document.getElementById('work-end').value = state.workEnd;
+
+        if (isWorkMode) {
+          block.classList.remove('hidden-block');
+          hoursInput.disabled = true;
+          hoursPlusBtn.classList.add('hidden-block');
+
+          if (isShiftStarted) {
+            if (isPaused) {
+              const pauseBtn = document.getElementById('btn-work-pause');
+              const banner = document.getElementById('work-timer-banner');
+              pauseBtn.innerText = 'Продолжить';
+              pauseBtn.classList.add('active');
+              banner.classList.add('paused');
+            }
+            startWorkTimer();
+          } else {
+            setOrderControlsState(true);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading work shift state:', e);
+      }
+    }
+
     function getNearestNextHourStr() {
       const now = new Date();
       if (now.getMinutes() > 0 || now.getSeconds() > 0) {
@@ -624,6 +688,12 @@
       if (startInput.value) {
         endInput.value = getEndTimePlus8Str(startInput.value);
       }
+      saveWorkState();
+      calculate();
+    }
+
+    function onWorkEndTimeChange() {
+      saveWorkState();
       calculate();
     }
 
@@ -667,6 +737,7 @@
         hoursPlusBtn.classList.remove('hidden-block');
         stopWorkShift();
       }
+      saveWorkState();
       calculate();
     }
 
@@ -674,6 +745,8 @@
       isShiftStarted = true;
       totalPauseMs = 0;
       isPaused = false;
+      pauseStartTime = null;
+      saveWorkState();
       startWorkTimer();
     }
 
@@ -684,6 +757,7 @@
       if (!isShiftStarted) {
         startWorkShift();
       } else {
+        saveWorkState();
         updateWorkShiftTimer();
       }
     }
@@ -697,6 +771,8 @@
     function stopWorkShift() {
       isShiftStarted = false;
       isPaused = false;
+      pauseStartTime = null;
+      totalPauseMs = 0;
       stopWorkTimer();
       
       document.getElementById('btn-work-start').classList.remove('hidden-block');
@@ -706,6 +782,7 @@
       document.getElementById('work-timer-banner').classList.add('hidden-block');
       
       setOrderControlsState(false);
+      saveWorkState();
     }
 
     function togglePauseWork() {
@@ -730,6 +807,7 @@
         banner.classList.remove('paused');
         setOrderControlsState(false);
       }
+      saveWorkState();
       updateWorkShiftTimer();
     }
 
@@ -976,6 +1054,7 @@
       document.getElementById('card-at-work').classList.remove('hidden-block');
       clearFormFields();
       loadTodayData();
+      loadWorkState();
     }
 
     function clearFormFields() {
@@ -1214,6 +1293,7 @@
     }
 
     loadTodayData();
+    loadWorkState();
   </script>
 </body>
 </html>
