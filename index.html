@@ -440,7 +440,10 @@
 
         <div id="ontheway-block" class="form-group hidden-block animated-block">
           <label for="ontheway-orders">Заказы «По пути» (+20 ₽ каждый)</label>
-          <input type="number" id="ontheway-orders" min="0" placeholder="0" oninput="calculate()">
+          <div class="input-with-btn">
+            <input type="number" id="ontheway-orders" min="0" placeholder="0" oninput="calculate()">
+            <button class="btn-plus-one" id="ontheway-plus-btn" onclick="addOne('ontheway-orders')">+1</button>
+          </div>
         </div>
       </div>
 
@@ -531,6 +534,7 @@
     
     let pauseStartTime = null;
     let totalPauseMs = 0;
+    let baseHours = 0; // Дополнительно накопленные часы с предыдущих смен за сегодня
 
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -587,7 +591,7 @@
       calculate();
     }
 
-    /* Сохранение и загрузка состояния режима "На работе" */
+    /* Сохранение и загрузка состояния смены */
     function saveWorkState() {
       if (!isWorkMode) {
         localStorage.removeItem('work_shift_state');
@@ -599,6 +603,7 @@
         isPaused,
         pauseStartTime,
         totalPauseMs,
+        baseHours,
         workStart: document.getElementById('work-start').value,
         workEnd: document.getElementById('work-end').value,
         shiftDateStr: getTodayStr()
@@ -621,6 +626,7 @@
         isPaused = !!state.isPaused;
         pauseStartTime = state.pauseStartTime || null;
         totalPauseMs = state.totalPauseMs || 0;
+        baseHours = state.baseHours || 0;
 
         document.getElementById('work-mode-toggle').checked = isWorkMode;
 
@@ -703,10 +709,14 @@
       document.getElementById('tips').disabled = blocked;
 
       const ordersPlusBtn = document.getElementById('orders-plus-btn');
+      const onthewayPlusBtn = document.getElementById('ontheway-plus-btn');
+
       if (blocked) {
-        ordersPlusBtn.classList.add('hidden-block');
+        if (ordersPlusBtn) ordersPlusBtn.classList.add('hidden-block');
+        if (onthewayPlusBtn) onthewayPlusBtn.classList.add('hidden-block');
       } else {
-        ordersPlusBtn.classList.remove('hidden-block');
+        if (ordersPlusBtn) ordersPlusBtn.classList.remove('hidden-block');
+        if (onthewayPlusBtn) onthewayPlusBtn.classList.remove('hidden-block');
       }
     }
 
@@ -722,6 +732,11 @@
         block.classList.remove('hidden-block');
         hoursInput.disabled = true;
         hoursPlusBtn.classList.add('hidden-block');
+
+        // Запоминаем часы, наработанные ранее за сегодня
+        if (!isShiftStarted) {
+          baseHours = parseFloat(hoursInput.value) || 0;
+        }
 
         if (!startInput.value) {
           startInput.value = getNearestNextHourStr();
@@ -746,6 +761,12 @@
       totalPauseMs = 0;
       isPaused = false;
       pauseStartTime = null;
+
+      // Фиксируем текущие базовые часы если они еще не установлены
+      if (baseHours === 0) {
+        baseHours = parseFloat(document.getElementById('hours').value) || 0;
+      }
+
       saveWorkState();
       startWorkTimer();
     }
@@ -773,6 +794,7 @@
       isPaused = false;
       pauseStartTime = null;
       totalPauseMs = 0;
+      baseHours = 0;
       stopWorkTimer();
       
       document.getElementById('btn-work-start').classList.remove('hidden-block');
@@ -881,7 +903,7 @@
         btnPause.classList.add('hidden-block');
         
         setOrderControlsState(true);
-        document.getElementById('hours').value = '0';
+        document.getElementById('hours').value = baseHours > 0 ? baseHours.toFixed(1) : '0';
         calculate();
         return;
       }
@@ -901,8 +923,9 @@
 
       banner.innerText = `Работа идет: ${formatHMS(activeWorkMs)}`;
 
-      const elapsedHours = (activeWorkMs / (1000 * 60 * 60)).toFixed(1);
-      document.getElementById('hours').value = elapsedHours;
+      const currentShiftHours = activeWorkMs / (1000 * 60 * 60);
+      const totalHours = (baseHours + currentShiftHours).toFixed(1);
+      document.getElementById('hours').value = totalHours;
 
       calculate();
     }
